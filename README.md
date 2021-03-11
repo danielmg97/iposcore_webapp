@@ -29,10 +29,14 @@ $ python main.py
 
 ---
 
-**Disclaimer**: This is a clinical decision support tool and cannot be used to make a final decision without medical advice.
+**Disclaimer**: We advise caution for clinicians who intend to use this tool as a predictive guide. Clinicians must balance the predictions from this tool against their practical experience. Authors cannot guarantee the accuracy of the calculation for any particular patient. The risk models were trained with patients' data from IPO-Porto.
 
 ---
 
 The contributions are currently under review. Please, contact Rafael Costa (rafael.s.costa@tecnico.ulisboa.pt), Rui Henriques (rmch@tecnico.ulisboa.pt), or Daniel Gonçalves (dmateusgoncalves@tecnico.ulisboa.pt) to obtain the updated reference.
 
 Guidelines to access data may be available upon request.
+
+---
+
+This beta web application version has been developed by Daniel Gonçalves, Lúcio Santos, Rui Henriques, Rafael Costa. It is part of the IPOscore research project.
