@@ -33,18 +33,18 @@ encoded_image = base64.b64encode(open(ipoScoreLogo, 'rb').read()).decode('ascii'
 
 def page(flag):
     return html.Div([
-
         dbc.Row(
             [
                 dbc.Col(html.Img(src='data:image/png;base64,{}'.format(encoded_image)), width=6),
                 dbc.Col(
                     html.Div([
-                        dbc.Button('EN', id='en_lang', color='primary', style={'float': 'right', 'margin-top': 5, 'margin-left': 'auto', 'margin-right': 5}),
-                        dbc.Button('PT', id='pt_lang', color='primary', style={'float': 'right', 'margin-top': 5, 'margin-left': 'auto', 'margin-right': 5})
+                        dbc.Button('EN', id='en_lang', color='primary',
+                                   style={'float': 'right', 'margin-top': 5, 'margin-left': 'auto', 'margin-right': 5}),
+                        dbc.Button('PT', id='pt_lang', color='primary',
+                                   style={'float': 'right', 'margin-top': 5, 'margin-left': 'auto', 'margin-right': 5})
                     ])
                 )
             ], justify='between'),
-
         dcc.Tabs([
             dcc.Tab(label=translater.dic["home"][flag],
                     children=[html.Div([
@@ -1093,152 +1093,27 @@ def update_result_home(n_clicks, flag, value1, value2, value3, value4, value5, v
         raise PreventUpdate
     else:
         # Predictions: Complications
-        imp_complications = pickle.load(open("./models/complications_imputer.sav", 'rb'))
-        x_complications = imp_complications.transform([[value4, value15, value3, value7, value20, value5, value17, value9]])
-
-        transformer_complications = pickle.load(open("./models/complications_transformer.sav", 'rb'))
-        x_complications = transformer_complications.transform(x_complications)
-
-        scaler_complications = pickle.load(open("./models/complications_scaler.sav", 'rb'))
-        x_complications = scaler_complications.transform(x_complications)
-
-        model_complications = pickle.load(open("./models/complications_model.sav", 'rb'))
-        pred_complications = model_complications.predict(x_complications)
-
-        message_complications = ""
-        if pred_complications[0] == 0:
-            message_complications = translater.dic["low_probability_complications"][flag]
-        else:
-            message_complications = translater.dic["high_probability_complications"][flag]
+        fig_complications, message_complications = predict_complications(flag, value1, value2, value3, value4, value5, value6, value7, value8)
 
         # Predictions: Severity
-        imp_severity = pickle.load(open("./models/severity_imputer.sav", 'rb'))
-        x_severity = imp_severity.transform([[value3, value15, value4, value7, value20, value16, value5, value17,
-                                              value9, value19, value11, value6, value10, value14, value18]])
-
-        transformer_severity = pickle.load(open("./models/severity_transformer.sav", 'rb'))
-        x_severity = transformer_severity.transform(x_severity)
-
-        scaler_severity = pickle.load(open("./models/severity_scaler.sav", 'rb'))
-        x_severity = scaler_severity.transform(x_severity)
-
-        model_severity = pickle.load(open("./models/severity_model.sav", 'rb'))
-        pred_severity = model_severity.predict(x_severity)
-
-        message_severity = ""
-        if pred_severity[0] == 1:
-            message_severity = translater.dic["complications_i"][flag]
-        elif pred_severity[0] == 2:
-            message_severity = translater.dic["complications_ii"][flag]
-        elif pred_severity[0] == 3:
-            message_severity = translater.dic["complications_iii"][flag]
-        elif pred_severity[0] == 4:
-            message_severity = translater.dic["complications_iv"][flag]
+        fig_severity, message_severity = predict_severity(flag, value1, value10, value11, value12, value13, value14, value15, value2, value3, value4,
+                                                          value5, value6, value7, value8, value9)
 
         # Predictions: UCI
-        imp_uci = pickle.load(open("./models/uci_imputer.sav", 'rb'))
-        x_uci = imp_uci.transform([[value20, value2, value3, value1, value14, value18, value12]])
-
-        transformer_uci = pickle.load(open("./models/uci_transformer.sav", 'rb'))
-        x_uci = transformer_uci.transform(x_uci)
-
-        scaler_uci = pickle.load(open("./models/uci_scaler.sav", 'rb'))
-        x_uci = scaler_uci.transform(x_uci)
-
-        model_uci = pickle.load(open("./models/uci_model.sav", 'rb'))
-        pred_uci = model_uci.predict(x_uci)
-
-        message_uci = ""
-        if pred_uci[0] == 0:
-            message_uci = translater.dic["hospitalization_1_day"][flag]
-        elif pred_uci[0] == 1:
-            message_uci = translater.dic["hospitalization_1_2_days"][flag]
-        elif pred_uci[0] == 2:
-            message_uci = translater.dic["hospitalization_2_days"][flag]
+        fig_uci, fig_uci_2, message_uci, pred_uci = predict_days_uci(flag, value1, value2, value3, value4, value5, value6, value7)
 
         # Predictions: IPOP
-        imp_ipop = pickle.load(open("./models/ipop_imputer.sav", 'rb'))
-        x_ipop = imp_ipop.transform([[value20, value3, value4, value15, value5, value16, value2, value11, value17, value9, value10]])
-
-        transformer_ipop = pickle.load(open("./models/ipop_transformer.sav", 'rb'))
-        x_ipop = transformer_ipop.transform(x_ipop)
-
-        scaler_ipop = pickle.load(open("./models/ipop_scaler.sav", 'rb'))
-        x_ipop = scaler_ipop.transform(x_ipop)
-
-        model_ipop = pickle.load(open("./models/ipop_model.sav", 'rb'))
-        pred_ipop = model_ipop.predict(x_ipop)
-
-        message_ipop = ""
-        if pred_ipop[0] <= 7:
-            message_ipop = translater.dic["hospitalization_7_days"][flag]
-        elif pred_ipop[0] > 7 and pred_ipop[0] <= 10:
-            message_ipop = translater.dic["hospitalization_7_10_days"][flag]
-        elif pred_ipop[0] > 10 and pred_ipop[0] <= 20:
-            message_ipop = translater.dic["hospitalization_10_20_days"][flag]
-        elif pred_ipop[0] > 20:
-            message_ipop = translater.dic["hospitalization_20_days"][flag]
+        fig_ipop, fig_ipop_2, message_ipop, pred_ipop = predict_days_ipop(flag, value1, value10, value11, value2, value3, value4, value5, value6,
+                                                                          value7, value8, value9)
 
         # Predictions: Death 1 year
-        imp_death_1_year = pickle.load(open("./models/death_1_year_imputer.sav", 'rb'))
-        x_death_1_year = imp_death_1_year.transform([[value15, value7, value5, value8, value13, value4, value3]])
-
-        transformer_death_1_year = pickle.load(open("./models/death_1_year_transformer.sav", 'rb'))
-        x_death_1_year = transformer_death_1_year.transform(x_death_1_year)
-
-        scaler_death_1_year = pickle.load(open("./models/death_1_year_scaler.sav", 'rb'))
-        x_death_1_year = scaler_death_1_year.transform(x_death_1_year)
-
-        model_death_1_year = pickle.load(open("./models/death_1_year_model.sav", 'rb'))
-        pred_death_1_year = model_death_1_year.predict(x_death_1_year)
-
-        message_death_1_year = ""
-        if pred_death_1_year[0] == 0:
-            message_death_1_year = translater.dic["low_probability_death"][flag]
-        elif pred_death_1_year[0] == 1:
-            message_death_1_year = translater.dic["high_probability_death"][flag]
+        fig_death_1_year, message_death_1_year = predict_death_1_year(flag, value1, value2, value3, value4, value5, value6, value7)
 
         # Predictions: Death Months
-        imp_death_months = pickle.load(open("./models/death_months_imputer.sav", 'rb'))
-        x_death_months = imp_death_months.transform([[value15, value7, value3, value4, value16, value8]])
-
-        transformer_death_months = pickle.load(open("./models/death_months_transformer.sav", 'rb'))
-        x_death_months = transformer_death_months.transform(x_death_months)
-
-        scaler_death_months = pickle.load(open("./models/death_months_scaler.sav", 'rb'))
-        x_death_months = scaler_death_months.transform(x_death_months)
-
-        model_death_months = pickle.load(open("./models/death_months_model.sav", 'rb'))
-        pred_death_months = model_death_months.predict(x_death_months)
-
-        message_death_months = ""
-        if pred_death_months[0] == 1:
-            message_death_months = translater.dic["death_30_days"][flag]
-        elif pred_death_months[0] == 2:
-            message_death_months = translater.dic["death_30_90_days"][flag]
-        elif pred_death_months[0] == 3:
-            message_death_months = translater.dic["death_90_days"][flag]
+        fig_death_months, message_death_months = predict_death_months(flag, value1, value2, value3, value4, value5, value6)
 
         # Predictions: NAS
-        imp_nas = pickle.load(open("./models/nas_imputer.sav", 'rb'))
-        x_nas = imp_nas.transform([[value2, value20, value3, value16]])
-
-        transformer_nas = pickle.load(open("./models/nas_transformer.sav", 'rb'))
-        x_nas = transformer_nas.transform(x_nas)
-
-        scaler_nas = pickle.load(open("./models/nas_scaler.sav", 'rb'))
-        x_nas = scaler_nas.transform(x_nas)
-
-        model_nas = pickle.load(open("./models/nas_model.sav", 'rb'))
-        pred_nas = model_nas.predict(x_nas)
-
-        message_nas = ""
-        if pred_nas[0] <= 60:
-            message_nas = translater.dic["0_60_points"][flag]
-        elif pred_nas[0] > 60 and pred_nas[0] <= 120:
-            message_nas = translater.dic["60_120_points"][flag]
-        elif pred_nas[0] > 120:
-            message_nas = translater.dic["120_points"][flag]
+        fig_nas, fig_nas_2, message_nas, pred_nas = predict_nas(flag, value1, value2, value3, value4)
 
         return html.Div([
             dbc.Row([
@@ -1248,37 +1123,42 @@ def update_result_home(n_clicks, flag, value1, value2, value3, value4, value5, v
                     html.Hr(),
                 ]), width=4),
                 dbc.Col(html.Div([
-                    dcc.Graph(figure=fig, style={'width': 700})
+                    dcc.Graph(figure=fig_complications, style={'width': 700})
                 ]), width=4),
             ], justify="center"),
             dbc.Row([
                 dbc.Col(html.Div([
                     html.Hr(),
                     html.H6(translater.dic["result"][flag] + message_severity),
+                    html.H6(translater.dic["clavien_dindo_scale"][flag]),
                     html.Hr(),
                 ]), width=4),
                 dbc.Col(html.Div([
-                    dcc.Graph(figure=fig, style={'width': 700})
+                    dcc.Graph(figure=fig_severity, style={'width': 700})
                 ]), width=4),
             ], justify="center"),
             dbc.Row([
                 dbc.Col(html.Div([
                     html.Hr(),
                     html.H6(translater.dic["result"][flag] + message_uci),
+                    html.H6(translater.dic["prediction"][flag] + str(pred_uci) + " ± 1"),
                     html.Hr(),
                 ]), width=4),
                 dbc.Col(html.Div([
-                    dcc.Graph(figure=fig, style={'width': 700})
+                    dcc.Graph(figure=fig_uci, style={'width': 700}),
+                    dcc.Graph(figure=fig_uci_2, style={'width': 700})
                 ]), width=4),
             ], justify="center"),
             dbc.Row([
                 dbc.Col(html.Div([
                     html.Hr(),
                     html.H6(translater.dic["result"][flag] + message_ipop),
+                    html.H6(translater.dic["prediction"][flag] + str(pred_ipop) + " ± 10"),
                     html.Hr(),
                 ]), width=4),
                 dbc.Col(html.Div([
-                    dcc.Graph(figure=fig, style={'width': 700})
+                    dcc.Graph(figure=fig_ipop, style={'width': 700}),
+                    dcc.Graph(figure=fig_ipop_2, style={'width': 700})
                 ]), width=4),
             ], justify="center"),
             dbc.Row([
@@ -1288,7 +1168,7 @@ def update_result_home(n_clicks, flag, value1, value2, value3, value4, value5, v
                     html.Hr(),
                 ]), width=4),
                 dbc.Col(html.Div([
-                    dcc.Graph(figure=fig, style={'width': 700})
+                    dcc.Graph(figure=fig_death_1_year, style={'width': 700})
                 ]), width=4),
             ], justify="center"),
             dbc.Row([
@@ -1298,17 +1178,19 @@ def update_result_home(n_clicks, flag, value1, value2, value3, value4, value5, v
                     html.Hr(),
                 ]), width=4),
                 dbc.Col(html.Div([
-                    dcc.Graph(figure=fig, style={'width': 700})
+                    dcc.Graph(figure=fig_death_months, style={'width': 700})
                 ]), width=4),
             ], justify="center"),
             dbc.Row([
                 dbc.Col(html.Div([
                     html.Hr(),
                     html.H6(translater.dic["result"][flag] + message_nas),
+                    html.H6(translater.dic["prediction"][flag] + str(pred_nas) + " ± 74"),
                     html.Hr(),
                 ]), width=4),
                 dbc.Col(html.Div([
-                    dcc.Graph(figure=fig, style={'width': 700})
+                    dcc.Graph(figure=fig_nas, style={'width': 700}),
+                    dcc.Graph(figure=fig_nas_2, style={'width': 700})
                 ]), width=4),
             ], justify="center"),
         ])
@@ -1329,49 +1211,8 @@ def update_result_complications(n_clicks, flag, value1, value2, value3, value4, 
     if n_clicks is None:
         raise PreventUpdate
     else:
-        imp = pickle.load(open("./models/complications_imputer.sav", 'rb'))
-        x = imp.transform([[value1, value2, value3, value4, value5, value6, value7, value8]])
-
-        transformer = pickle.load(open("./models/complications_transformer.sav", 'rb'))
-        x = transformer.transform(x)
-
-        scaler = pickle.load(open("./models/complications_scaler.sav", 'rb'))
-        x = scaler.transform(x)
-
-        model = pickle.load(open("./models/complications_model.sav", 'rb'))
-        pred = model.predict(x)
-        probability = model.predict_proba(x)
-
-        message = ""
-        if pred[0] == 0:
-            message = translater.dic["low_probability_complications"][flag]
-        else:
-            message = translater.dic["high_probability_complications"][flag]
-
-        df = load_and_run.load_data(global_variables.outputs[0],
-                                    ['PP contaminação peritoneal', 'ACS estado funcional', 'ACS sépsis sistémica', 'ASA', 'PP nº procedimentos',
-                                     'PP hemoglobina', 'PP respiratório', 'ACS dispneia'])
-        X_graph = df.iloc[:, :-1]
-        y_graph = df.iloc[:, -1]
-        X_graph = imp.transform(X_graph)
-        X_graph = transformer.transform(X_graph)
-        X_graph = scaler.transform(X_graph)
-        probs = model.predict_proba(X_graph)
-
-        graph_probs = []
-        for line in range(0, len(probs)):
-            if y_graph.values[line] == 0:
-                graph_probs.append([probs[line][0], translater.dic["no"][flag], translater.dic["training_data"][flag]])
-            elif y_graph.values[line] == 1:
-                graph_probs.append([probs[line][1], translater.dic["yes"][flag], translater.dic["training_data"][flag]])
-
-        graph_probs.append([probability[0][0], translater.dic["no"][flag], translater.dic["current_patient"][flag]])
-        graph_probs.append([probability[0][1], translater.dic["yes"][flag], translater.dic["current_patient"][flag]])
-
-        df = pd.DataFrame(graph_probs, columns=[translater.dic["probability"][flag], translater.dic["complications"][flag], 'Tipo'])
-
-        fig = px.violin(df, y=translater.dic["probability"][flag], x=translater.dic["complications"][flag], color='Tipo', violinmode='overlay',
-                        box=True, points="all", hover_data=df.columns)
+        # Predictions: Complications
+        fig, message = predict_complications(flag, value1, value2, value3, value4, value5, value6, value7, value8)
 
         return html.Div([
             html.Div([
@@ -1406,61 +1247,9 @@ def update_result_severity(n_clicks, flag, value1, value2, value3, value4, value
     if n_clicks is None:
         raise PreventUpdate
     else:
-        imp = pickle.load(open("./models/severity_imputer.sav", 'rb'))
-        x = imp.transform([[value1, value2, value3, value4, value5, value6, value7, value8, value9,
-                            value10, value11, value12, value13, value14, value15]])
-
-        transformer = pickle.load(open("./models/severity_transformer.sav", 'rb'))
-        x = transformer.transform(x)
-
-        scaler = pickle.load(open("./models/severity_scaler.sav", 'rb'))
-        x = scaler.transform(x)
-
-        model = pickle.load(open("./models/severity_model.sav", 'rb'))
-        pred = model.predict(x)
-        probability = model.predict_proba(x)
-
-        message = ""
-        if pred[0] == 1:
-            message = translater.dic["complications_i"][flag]
-        elif pred[0] == 2:
-            message = translater.dic["complications_ii"][flag]
-        elif pred[0] == 3:
-            message = translater.dic["complications_iii"][flag]
-        elif pred[0] == 4:
-            message = translater.dic["complications_iv"][flag]
-
-        df = load_and_run.load_data(global_variables.outputs[1],
-                                    ['ACS sépsis sistémica', 'ACS estado funcional', 'PP contaminação peritoneal', 'ASA', 'PP nº procedimentos',
-                                     'PP leucócitos', 'PP hemoglobina', 'PP respiratório', 'ACS dispneia', 'PP pulsação arterial', 'PP sódio',
-                                     'PP ECG', 'PP ureia', 'ARISCAT procedimento emergente', 'ARISCAT anemia pré-operativa'])
-        X_graph = df.iloc[:, :-1]
-        y_graph = df.iloc[:, -1]
-        X_graph = imp.transform(X_graph)
-        X_graph = transformer.transform(X_graph)
-        X_graph = scaler.transform(X_graph)
-        probs = model.predict_proba(X_graph)
-
-        graph_probs = []
-        for line in range(0, len(probs)):
-            if y_graph.values[line] == 1:
-                graph_probs.append([probs[line][0], "I", translater.dic["training_data"][flag]])
-            elif y_graph.values[line] == 2:
-                graph_probs.append([probs[line][1], "II", translater.dic["training_data"][flag]])
-            elif y_graph.values[line] == 3:
-                graph_probs.append([probs[line][2], "III", translater.dic["training_data"][flag]])
-            elif y_graph.values[line] == 4:
-                graph_probs.append([probs[line][3], "IV", translater.dic["training_data"][flag]])
-
-        graph_probs.append([probability[0][0], "I", translater.dic["current_patient"][flag]])
-        graph_probs.append([probability[0][1], "II", translater.dic["current_patient"][flag]])
-        graph_probs.append([probability[0][2], "III", translater.dic["current_patient"][flag]])
-        graph_probs.append([probability[0][3], "IV", translater.dic["current_patient"][flag]])
-
-        df = pd.DataFrame(graph_probs, columns=[translater.dic["probability"][flag], translater.dic["severity"][flag], 'Tipo'])
-
-        fig = px.violin(df, y=translater.dic["probability"][flag], x=translater.dic["severity"][flag], color='Tipo', violinmode='overlay', box=True,
-                        points="all", hover_data=df.columns)
+        # Predictions: Severity
+        fig, message = predict_severity(flag, value1, value10, value11, value12, value13, value14, value15, value2, value3, value4,
+                                        value5, value6, value7, value8, value9)
 
         return html.Div([
             html.Div([
@@ -1487,57 +1276,8 @@ def update_result_uci(n_clicks, flag, value1, value2, value3, value4, value5, va
     if n_clicks is None:
         raise PreventUpdate
     else:
-        imp = pickle.load(open("./models/uci_imputer.sav", 'rb'))
-        x = imp.transform([[value1, value2, value3, value4, value5, value6, value7]])
-
-        transformer = pickle.load(open("./models/uci_transformer.sav", 'rb'))
-        x = transformer.transform(x)
-
-        scaler = pickle.load(open("./models/uci_scaler.sav", 'rb'))
-        x = scaler.transform(x)
-
-        model = pickle.load(open("./models/uci_model.sav", 'rb'))
-        pred = model.predict(x)
-
-        message = ""
-        if pred[0] <= 1:
-            message = translater.dic["hospitalization_1_day"][flag]
-        elif pred[0] > 1 and pred[0] <= 2:
-            message = translater.dic["hospitalization_1_2_days"][flag]
-        elif pred[0] > 2:
-            message = translater.dic["hospitalization_2_days"][flag]
-
-        df = load_and_run.load_data(global_variables.outputs[2], ['PP nº procedimentos', 'ARISCAT duração cirurgia', 'ACS sépsis sistémica',
-                                                                  'ARISCAT infeção respiratória último mês', 'ARISCAT procedimento emergente',
-                                                                  'ARISCAT anemia pré-operativa', 'ACS insuficiência renal aguda'])
-        X_graph = df.iloc[:, :-1]
-        y_graph = df.iloc[:, -1].values
-        X_graph = imp.transform(X_graph)
-        X_graph = transformer.transform(X_graph)
-        X_graph = scaler.transform(X_graph)
-        preds = model.predict(X_graph)
-
-        graph_preds = []
-        for line in range(0, len(preds)):
-            graph_preds.append([y_graph[line], preds[line], (preds[line] - y_graph[line])])
-            # print(preds[line] - y_graph[line])
-
-        df = pd.DataFrame(graph_preds,
-                          columns=[translater.dic["uci_days"][flag], translater.dic["predicted_days"][flag], translater.dic["error_days"][flag]])
-
-        fig = px.scatter(df, x=translater.dic["uci_days"][flag], y=translater.dic["predicted_days"][flag])
-
-        fig2 = px.scatter(df, x=translater.dic["uci_days"][flag], y=translater.dic["error_days"][flag])
-
-        # fig = go.Figure()
-        # # Add traces
-        # fig.add_trace(go.Scatter(x=df.loc[:,"Dias na UCI"].values, y=df.loc[:,"Dias Previstos"].values, mode='markers'))
-        # fig.add_trace(go.Scatter(x=[pred,pred],y=[0,1.5], mode='lines',line=go.scatter.Line(color="gray")))
-        #
-        # fig2 = go.Figure()
-        # # Add traces
-        # fig2.add_trace(go.Scatter(x=df.loc[:,"Dias na UCI"].values, y=df.loc[:,"Erro (dias)"].values, mode='markers'))
-        # fig2.add_trace(go.Scatter(x=[pred,pred],y=[0,15], mode='lines',line=go.scatter.Line(color="gray")))
+        # Predictions: UCI
+        fig, fig2, message, pred = predict_days_uci(flag, value1, value2, value3, value4, value5, value6, value7)
 
         return html.Div([
             html.Div([
@@ -1570,49 +1310,8 @@ def update_result_ipop(n_clicks, flag, value1, value2, value3, value4, value5, v
     if n_clicks is None:
         raise PreventUpdate
     else:
-        imp = pickle.load(open("./models/ipop_imputer.sav", 'rb'))
-        x = imp.transform([[value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11]])
-
-        transformer = pickle.load(open("./models/ipop_transformer.sav", 'rb'))
-        x = transformer.transform(x)
-
-        scaler = pickle.load(open("./models/ipop_scaler.sav", 'rb'))
-        x = scaler.transform(x)
-
-        model = pickle.load(open("./models/ipop_model.sav", 'rb'))
-        pred = model.predict(x)
-
-        message = ""
-        if pred[0] <= 7:
-            message = translater.dic["hospitalization_7_days"][flag]
-        elif pred[0] > 7 and pred[0] <= 10:
-            message = translater.dic["hospitalization_7_10_days"][flag]
-        elif pred[0] > 10 and pred[0] <= 20:
-            message = translater.dic["hospitalization_10_20_days"][flag]
-        elif pred[0] > 20:
-            message = translater.dic["hospitalization_20_days"][flag]
-
-        df = load_and_run.load_data(global_variables.outputs[6],
-                                    ['PP nº procedimentos', 'ACS sépsis sistémica', 'PP contaminação peritoneal', 'ACS estado funcional',
-                                     'PP hemoglobina', 'PP leucócitos', 'ARISCAT duração cirurgia', 'PP sódio', 'PP respiratório', 'ACS dispneia',
-                                     'PP ureia'])
-        X_graph = df.iloc[:, :-1]
-        y_graph = df.iloc[:, -1].values
-        X_graph = imp.transform(X_graph)
-        X_graph = transformer.transform(X_graph)
-        X_graph = scaler.transform(X_graph)
-        preds = model.predict(X_graph)
-
-        graph_preds = []
-        for line in range(0, len(preds)):
-            graph_preds.append([y_graph[line], preds[line], y_graph[line] - preds[line]])
-
-        df = pd.DataFrame(graph_preds,
-                          columns=[translater.dic["ipop_days"][flag], translater.dic["predicted_days"][flag], translater.dic["error_days"][flag]])
-
-        fig = px.scatter(df, x=translater.dic["ipop_days"][flag], y=translater.dic["predicted_days"][flag])
-
-        fig2 = px.scatter(df, x=translater.dic["ipop_days"][flag], y=translater.dic["error_days"][flag])
+        # Predictions: IPOP
+        fig, fig2, message, pred = predict_days_ipop(flag, value1, value10, value11, value2, value3, value4, value5, value6, value7, value8, value9)
 
         return html.Div([
             html.Div([
@@ -1640,49 +1339,8 @@ def update_result_death_1_year(n_clicks, flag, value1, value2, value3, value4, v
     if n_clicks is None:
         raise PreventUpdate
     else:
-        imp = pickle.load(open("./models/death_1_year_imputer.sav", 'rb'))
-        x = imp.transform([[value1, value2, value3, value4, value5, value6, value7]])
-
-        transformer = pickle.load(open("./models/death_1_year_transformer.sav", 'rb'))
-        x = transformer.transform(x)
-
-        scaler = pickle.load(open("./models/death_1_year_scaler.sav", 'rb'))
-        x = scaler.transform(x)
-
-        model = pickle.load(open("./models/death_1_year_model.sav", 'rb'))
-        pred = model.predict(x)
-        probability = model.predict_proba(x)
-
-        message = ""
-        if pred[0] == 0:
-            message = translater.dic["low_probability_death"][flag]
-        elif pred[0] == 1:
-            message = translater.dic["high_probability_death"][flag]
-
-        df = load_and_run.load_data(global_variables.outputs[3],
-                                    ['ACS estado funcional', 'ASA', 'PP hemoglobina', 'PP estado da malignidade', 'ACS peso',
-                                     'PP contaminação peritoneal', 'ACS sépsis sistémica'])
-        X_graph = df.iloc[:, :-1]
-        y_graph = df.iloc[:, -1]
-        X_graph = imp.transform(X_graph)
-        X_graph = transformer.transform(X_graph)
-        X_graph = scaler.transform(X_graph)
-        probs = model.predict_proba(X_graph)
-
-        graph_probs = []
-        for line in range(0, len(probs)):
-            if y_graph.values[line] == 0:
-                graph_probs.append([probs[line][0], translater.dic["no"][flag], translater.dic["training_data"][flag]])
-            elif y_graph.values[line] == 1:
-                graph_probs.append([probs[line][1], translater.dic["yes"][flag], translater.dic["training_data"][flag]])
-
-        graph_probs.append([probability[0][0], translater.dic["no"][flag], translater.dic["current_patient"][flag]])
-        graph_probs.append([probability[0][1], translater.dic["yes"][flag], translater.dic["current_patient"][flag]])
-
-        df = pd.DataFrame(graph_probs, columns=[translater.dic["probability"][flag], translater.dic["death_1_year"][flag], 'Tipo'])
-
-        fig = px.violin(df, y=translater.dic["probability"][flag], x=translater.dic["death_1_year"][flag], color='Tipo', violinmode='overlay',
-                        box=True, points="all", hover_data=df.columns)
+        # Predictions: Death 1 year
+        fig, message = predict_death_1_year(flag, value1, value2, value3, value4, value5, value6, value7)
 
         return html.Div([
             html.Div([
@@ -1707,57 +1365,8 @@ def update_result_death_months(n_clicks, flag, value1, value2, value3, value4, v
     if n_clicks is None:
         raise PreventUpdate
     else:
-        imp = pickle.load(open("./models/death_months_imputer.sav", 'rb'))
-        x = imp.transform([[value1, value2, value3, value4, value5, value6]])
-
-        transformer = pickle.load(open("./models/death_months_transformer.sav", 'rb'))
-        x = transformer.transform(x)
-
-        scaler = pickle.load(open("./models/death_months_scaler.sav", 'rb'))
-        x = scaler.transform(x)
-
-        model = pickle.load(open("./models/death_months_model.sav", 'rb'))
-        pred = model.predict(x)
-        probability = model.predict_proba(x)
-
-        message = ""
-        if pred[0] == 1:
-            message = translater.dic["death_30_days"][flag]
-        elif pred[0] == 2:
-            message = translater.dic["death_30_90_days"][flag]
-        elif pred[0] == 3:
-            message = translater.dic["death_90_days"][flag]
-
-        df = load_and_run.load_data(global_variables.outputs[4],
-                                    ['ACS estado funcional', 'ASA', 'ACS sépsis sistémica', 'PP contaminação peritoneal', 'PP leucócitos',
-                                     'PP estado da malignidade'])
-        X_graph = df.iloc[:, :-1]
-        y_graph = df.iloc[:, -1]
-        X_graph = imp.transform(X_graph)
-        X_graph = transformer.transform(X_graph)
-        X_graph = scaler.transform(X_graph)
-        probs = model.predict_proba(X_graph)
-
-        graph_probs = []
-        for line in range(0, len(probs)):
-            if y_graph.values[line] == 1:
-                graph_probs.append([probs[line][0], translater.dic["30_days"][flag], translater.dic["training_data"][flag]])
-            elif y_graph.values[line] == 2:
-                graph_probs.append([probs[line][1], translater.dic["30_90_days"][flag], translater.dic["training_data"][flag]])
-            elif y_graph.values[line] == 3:
-                graph_probs.append([probs[line][2], translater.dic["nas"][flag], translater.dic["training_data"][flag]])
-
-        graph_probs.append([probability[0][0], translater.dic["30_days"][flag], translater.dic["current_patient"][flag]])
-        graph_probs.append([probability[0][1], translater.dic["30_90_days"][flag], translater.dic["current_patient"][flag]])
-        graph_probs.append([probability[0][2], translater.dic["90_days"][flag], translater.dic["current_patient"][flag]])
-
-        df = pd.DataFrame(graph_probs, columns=[translater.dic["probability"][flag], translater.dic["days_after_surgery"][flag], 'Tipo'])
-
-        fig = px.violin(df, y=translater.dic["probability"][flag], x=translater.dic["days_after_surgery"][flag], color='Tipo', violinmode='overlay',
-                        box=True, points="all",
-                        category_orders={
-                            translater.dic["days_after_surgery"][flag]: [translater.dic["30_days"][flag], translater.dic["30_90_days"][flag],
-                                                                         translater.dic["90_days"][flag]]}, hover_data=df.columns)
+        # Predictions: Death Months
+        fig, message = predict_death_months(flag, value1, value2, value3, value4, value5, value6)
 
         return html.Div([
             html.Div([
@@ -1780,45 +1389,8 @@ def update_result_nas(n_clicks, flag, value1, value2, value3, value4):
     if n_clicks is None:
         raise PreventUpdate
     else:
-        imp = pickle.load(open("./models/nas_imputer.sav", 'rb'))
-        x = imp.transform([[value1, value2, value3, value4]])
-
-        transformer = pickle.load(open("./models/nas_transformer.sav", 'rb'))
-        x = transformer.transform(x)
-
-        scaler = pickle.load(open("./models/nas_scaler.sav", 'rb'))
-        x = scaler.transform(x)
-
-        model = pickle.load(open("./models/nas_model.sav", 'rb'))
-        pred = model.predict(x)
-
-        message = ""
-        if pred[0] <= 60:
-            message = translater.dic["0_60_points"][flag]
-        elif pred[0] > 60 and pred[0] <= 120:
-            message = translater.dic["60_120_points"][flag]
-        elif pred[0] > 120:
-            message = translater.dic["120_points"][flag]
-
-        df = load_and_run.load_data(global_variables.outputs[5],
-                                    ['ARISCAT duração cirurgia', 'PP nº procedimentos', 'ACS sépsis sistémica', 'PP leucócitos'])
-        X_graph = df.iloc[:, :-1]
-        y_graph = df.iloc[:, -1].values
-        X_graph = imp.transform(X_graph)
-        X_graph = transformer.transform(X_graph)
-        X_graph = scaler.transform(X_graph)
-        preds = model.predict(X_graph)
-
-        graph_preds = []
-        for line in range(0, len(preds)):
-            graph_preds.append([y_graph[line], preds[line], y_graph[line] - preds[line]])
-
-        df = pd.DataFrame(graph_preds,
-                          columns=[translater.dic["nas"][flag], translater.dic["predicted_points"][flag], translater.dic["error_points"][flag]])
-
-        fig = px.scatter(df, x=translater.dic["nas"][flag], y=translater.dic["predicted_points"][flag])
-
-        fig2 = px.scatter(df, x=translater.dic["nas"][flag], y=translater.dic["error_points"][flag])
+        # Predict NAS Points
+        fig, fig2, message, pred = predict_nas(flag, value1, value2, value3, value4)
 
         return html.Div([
             html.Div([
@@ -1830,6 +1402,348 @@ def update_result_nas(n_clicks, flag, value1, value2, value3, value4):
             dcc.Graph(figure=fig, style={'width': 700}),
             dcc.Graph(figure=fig2, style={'width': 700})
         ])
+
+
+def predict_complications(flag, value1, value2, value3, value4, value5, value6, value7, value8):
+    imp = pickle.load(open("./models/complications_imputer.sav", 'rb'))
+    x = imp.transform([[value1, value2, value3, value4, value5, value6, value7, value8]])
+
+    transformer = pickle.load(open("./models/complications_transformer.sav", 'rb'))
+    x = transformer.transform(x)
+
+    scaler = pickle.load(open("./models/complications_scaler.sav", 'rb'))
+    x = scaler.transform(x)
+
+    model = pickle.load(open("./models/complications_model.sav", 'rb'))
+    pred = model.predict(x)
+    probability_complications = model.predict_proba(x)
+
+    message_complications = ""
+    if pred[0] == 0:
+        message_complications = translater.dic["low_probability_complications"][flag]
+    else:
+        message_complications = translater.dic["high_probability_complications"][flag]
+
+    df = load_and_run.load_data(global_variables.outputs[0],
+                                ['PP contaminação peritoneal', 'ACS estado funcional', 'ACS sépsis sistémica', 'ASA', 'PP nº procedimentos',
+                                 'PP hemoglobina', 'PP respiratório', 'ACS dispneia'])
+    X_graph = df.iloc[:, :-1]
+    y_graph = df.iloc[:, -1]
+    X_graph = imp.transform(X_graph)
+    X_graph = transformer.transform(X_graph)
+    X_graph = scaler.transform(X_graph)
+    probs = model.predict_proba(X_graph)
+    graph_probs = []
+
+    for line in range(0, len(probs)):
+        if y_graph.values[line] == 0:
+            graph_probs.append([probs[line][0], translater.dic["no"][flag], translater.dic["training_data"][flag]])
+        elif y_graph.values[line] == 1:
+            graph_probs.append([probs[line][1], translater.dic["yes"][flag], translater.dic["training_data"][flag]])
+
+    graph_probs.append([probability_complications[0][0], translater.dic["no"][flag], translater.dic["current_patient"][flag]])
+    graph_probs.append([probability_complications[0][1], translater.dic["yes"][flag], translater.dic["current_patient"][flag]])
+
+    df = pd.DataFrame(graph_probs, columns=[translater.dic["probability"][flag], translater.dic["complications"][flag], 'Tipo'])
+
+    fig_complications = px.violin(df, y=translater.dic["probability"][flag], x=translater.dic["complications"][flag], color='Tipo',
+                                  violinmode='overlay',
+                                  box=True, points="all", hover_data=df.columns)
+
+    return fig_complications, message_complications
+
+
+def predict_severity(flag, value1, value10, value11, value12, value13, value14, value15, value2, value3, value4, value5, value6, value7, value8,
+                     value9):
+    imp = pickle.load(open("./models/severity_imputer.sav", 'rb'))
+    x = imp.transform([[value1, value2, value3, value4, value5, value6, value7, value8, value9,
+                        value10, value11, value12, value13, value14, value15]])
+
+    transformer = pickle.load(open("./models/severity_transformer.sav", 'rb'))
+    x = transformer.transform(x)
+
+    scaler = pickle.load(open("./models/severity_scaler.sav", 'rb'))
+    x = scaler.transform(x)
+
+    model = pickle.load(open("./models/severity_model.sav", 'rb'))
+    pred = model.predict(x)
+    probability = model.predict_proba(x)
+
+    message_severity = ""
+    if pred[0] == 1:
+        message_severity = translater.dic["complications_i"][flag]
+    elif pred[0] == 2:
+        message_severity = translater.dic["complications_ii"][flag]
+    elif pred[0] == 3:
+        message_severity = translater.dic["complications_iii"][flag]
+    elif pred[0] == 4:
+        message_severity = translater.dic["complications_iv"][flag]
+
+    df = load_and_run.load_data(global_variables.outputs[1],
+                                ['ACS sépsis sistémica', 'ACS estado funcional', 'PP contaminação peritoneal', 'ASA', 'PP nº procedimentos',
+                                 'PP leucócitos', 'PP hemoglobina', 'PP respiratório', 'ACS dispneia', 'PP pulsação arterial', 'PP sódio',
+                                 'PP ECG', 'PP ureia', 'ARISCAT procedimento emergente', 'ARISCAT anemia pré-operativa'])
+
+    X_graph = df.iloc[:, :-1]
+    y_graph = df.iloc[:, -1]
+    X_graph = imp.transform(X_graph)
+    X_graph = transformer.transform(X_graph)
+    X_graph = scaler.transform(X_graph)
+    probs = model.predict_proba(X_graph)
+    graph_probs = []
+
+    for line in range(0, len(probs)):
+        if y_graph.values[line] == 1:
+            graph_probs.append([probs[line][0], "I", translater.dic["training_data"][flag]])
+        elif y_graph.values[line] == 2:
+            graph_probs.append([probs[line][1], "II", translater.dic["training_data"][flag]])
+        elif y_graph.values[line] == 3:
+            graph_probs.append([probs[line][2], "III", translater.dic["training_data"][flag]])
+        elif y_graph.values[line] == 4:
+            graph_probs.append([probs[line][3], "IV", translater.dic["training_data"][flag]])
+
+    graph_probs.append([probability[0][0], "I", translater.dic["current_patient"][flag]])
+    graph_probs.append([probability[0][1], "II", translater.dic["current_patient"][flag]])
+    graph_probs.append([probability[0][2], "III", translater.dic["current_patient"][flag]])
+    graph_probs.append([probability[0][3], "IV", translater.dic["current_patient"][flag]])
+
+    df = pd.DataFrame(graph_probs, columns=[translater.dic["probability"][flag], translater.dic["severity"][flag], 'Tipo'])
+
+    fig_severity = px.violin(df, y=translater.dic["probability"][flag], x=translater.dic["severity"][flag], color='Tipo', violinmode='overlay',
+                             box=True,
+                             points="all", hover_data=df.columns)
+
+    return fig_severity, message_severity
+
+
+def predict_days_uci(flag, value1, value2, value3, value4, value5, value6, value7):
+    imp = pickle.load(open("./models/uci_imputer.sav", 'rb'))
+    x = imp.transform([[value1, value2, value3, value4, value5, value6, value7]])
+
+    transformer = pickle.load(open("./models/uci_transformer.sav", 'rb'))
+    x = transformer.transform(x)
+
+    scaler = pickle.load(open("./models/uci_scaler.sav", 'rb'))
+    x = scaler.transform(x)
+
+    model = pickle.load(open("./models/uci_model.sav", 'rb'))
+    pred = model.predict(x)
+
+    message_uci = ""
+    if pred[0] <= 1:
+        message_uci = translater.dic["hospitalization_1_day"][flag]
+    elif pred[0] > 1 and pred[0] <= 2:
+        message_uci = translater.dic["hospitalization_1_2_days"][flag]
+    elif pred[0] > 2:
+        message_uci = translater.dic["hospitalization_2_days"][flag]
+
+    df = load_and_run.load_data(global_variables.outputs[2], ['PP nº procedimentos', 'ARISCAT duração cirurgia', 'ACS sépsis sistémica',
+                                                              'ARISCAT infeção respiratória último mês', 'ARISCAT procedimento emergente',
+                                                              'ARISCAT anemia pré-operativa', 'ACS insuficiência renal aguda'])
+
+    X_graph = df.iloc[:, :-1]
+    y_graph = df.iloc[:, -1].values
+    X_graph = imp.transform(X_graph)
+    X_graph = transformer.transform(X_graph)
+    X_graph = scaler.transform(X_graph)
+    preds = model.predict(X_graph)
+    graph_preds = []
+
+    for line in range(0, len(preds)):
+        graph_preds.append([y_graph[line], preds[line], (preds[line] - y_graph[line])])
+        # print(preds[line] - y_graph[line])
+
+    df = pd.DataFrame(graph_preds,
+                      columns=[translater.dic["uci_days"][flag], translater.dic["predicted_days"][flag], translater.dic["error_days"][flag]])
+
+    fig_uci = px.scatter(df, x=translater.dic["predicted_days"][flag], y=translater.dic["uci_days"][flag])
+    fig_uci_2 = px.scatter(df, x=translater.dic["predicted_days"][flag], y=translater.dic["error_days"][flag])
+
+    return fig_uci, fig_uci_2, message_uci, pred
+
+
+def predict_days_ipop(flag, value1, value10, value11, value2, value3, value4, value5, value6, value7, value8, value9):
+    imp = pickle.load(open("./models/ipop_imputer.sav", 'rb'))
+    x = imp.transform([[value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11]])
+
+    transformer = pickle.load(open("./models/ipop_transformer.sav", 'rb'))
+    x = transformer.transform(x)
+
+    scaler = pickle.load(open("./models/ipop_scaler.sav", 'rb'))
+    x = scaler.transform(x)
+
+    model = pickle.load(open("./models/ipop_model.sav", 'rb'))
+    pred = model.predict(x)
+
+    message_ipop = ""
+    if pred[0] <= 7:
+        message_ipop = translater.dic["hospitalization_7_days"][flag]
+    elif pred[0] > 7 and pred[0] <= 10:
+        message_ipop = translater.dic["hospitalization_7_10_days"][flag]
+    elif pred[0] > 10 and pred[0] <= 20:
+        message_ipop = translater.dic["hospitalization_10_20_days"][flag]
+    elif pred[0] > 20:
+        message_ipop = translater.dic["hospitalization_20_days"][flag]
+
+    df = load_and_run.load_data(global_variables.outputs[6],
+                                ['PP nº procedimentos', 'ACS sépsis sistémica', 'PP contaminação peritoneal', 'ACS estado funcional',
+                                 'PP hemoglobina', 'PP leucócitos', 'ARISCAT duração cirurgia', 'PP sódio', 'PP respiratório', 'ACS dispneia',
+                                 'PP ureia'])
+    X_graph = df.iloc[:, :-1]
+    y_graph = df.iloc[:, -1].values
+    X_graph = imp.transform(X_graph)
+    X_graph = transformer.transform(X_graph)
+    X_graph = scaler.transform(X_graph)
+    preds = model.predict(X_graph)
+    graph_preds = []
+
+    for line in range(0, len(preds)):
+        graph_preds.append([y_graph[line], preds[line], y_graph[line] - preds[line]])
+
+    df = pd.DataFrame(graph_preds,
+                      columns=[translater.dic["ipop_days"][flag], translater.dic["predicted_days"][flag], translater.dic["error_days"][flag]])
+
+    fig_ipop = px.scatter(df, x=translater.dic["predicted_days"][flag], y=translater.dic["ipop_days"][flag])
+    fig_ipop_2 = px.scatter(df, x=translater.dic["predicted_days"][flag], y=translater.dic["error_days"][flag])
+
+    return fig_ipop, fig_ipop_2, message_ipop, pred
+
+
+def predict_death_1_year(flag, value1, value2, value3, value4, value5, value6, value7):
+    imp = pickle.load(open("./models/death_1_year_imputer.sav", 'rb'))
+    x = imp.transform([[value1, value2, value3, value4, value5, value6, value7]])
+    transformer = pickle.load(open("./models/death_1_year_transformer.sav", 'rb'))
+    x = transformer.transform(x)
+    scaler = pickle.load(open("./models/death_1_year_scaler.sav", 'rb'))
+    x = scaler.transform(x)
+    model = pickle.load(open("./models/death_1_year_model.sav", 'rb'))
+    pred = model.predict(x)
+    probability = model.predict_proba(x)
+    message_death_1_year = ""
+    if pred[0] == 0:
+        message_death_1_year = translater.dic["low_probability_death"][flag]
+    elif pred[0] == 1:
+        message_death_1_year = translater.dic["high_probability_death"][flag]
+    df = load_and_run.load_data(global_variables.outputs[3],
+                                ['ACS estado funcional', 'ASA', 'PP hemoglobina', 'PP estado da malignidade', 'ACS peso',
+                                 'PP contaminação peritoneal', 'ACS sépsis sistémica'])
+    X_graph = df.iloc[:, :-1]
+    y_graph = df.iloc[:, -1]
+    X_graph = imp.transform(X_graph)
+    X_graph = transformer.transform(X_graph)
+    X_graph = scaler.transform(X_graph)
+    probs = model.predict_proba(X_graph)
+    graph_probs = []
+    for line in range(0, len(probs)):
+        if y_graph.values[line] == 0:
+            graph_probs.append([probs[line][0], translater.dic["no"][flag], translater.dic["training_data"][flag]])
+        elif y_graph.values[line] == 1:
+            graph_probs.append([probs[line][1], translater.dic["yes"][flag], translater.dic["training_data"][flag]])
+    graph_probs.append([probability[0][0], translater.dic["no"][flag], translater.dic["current_patient"][flag]])
+    graph_probs.append([probability[0][1], translater.dic["yes"][flag], translater.dic["current_patient"][flag]])
+    df = pd.DataFrame(graph_probs, columns=[translater.dic["probability"][flag], translater.dic["death_1_year"][flag], 'Tipo'])
+    fig_death_1_year = px.violin(df, y=translater.dic["probability"][flag], x=translater.dic["death_1_year"][flag], color='Tipo',
+                                 violinmode='overlay', box=True, points="all", hover_data=df.columns)
+    return fig_death_1_year, message_death_1_year
+
+
+def predict_death_months(flag, value1, value2, value3, value4, value5, value6):
+    imp = pickle.load(open("./models/death_months_imputer.sav", 'rb'))
+    x = imp.transform([[value1, value2, value3, value4, value5, value6]])
+
+    transformer = pickle.load(open("./models/death_months_transformer.sav", 'rb'))
+    x = transformer.transform(x)
+    scaler = pickle.load(open("./models/death_months_scaler.sav", 'rb'))
+
+    x = scaler.transform(x)
+    model = pickle.load(open("./models/death_months_model.sav", 'rb'))
+
+    pred = model.predict(x)
+    probability = model.predict_proba(x)
+
+    message_death_months = ""
+    if pred[0] == 1:
+        message_death_months = translater.dic["death_30_days"][flag]
+    elif pred[0] == 2:
+        message_death_months = translater.dic["death_30_90_days"][flag]
+    elif pred[0] == 3:
+        message_death_months = translater.dic["death_90_days"][flag]
+    df = load_and_run.load_data(global_variables.outputs[4],
+                                ['ACS estado funcional', 'ASA', 'ACS sépsis sistémica', 'PP contaminação peritoneal', 'PP leucócitos',
+                                 'PP estado da malignidade'])
+    X_graph = df.iloc[:, :-1]
+    y_graph = df.iloc[:, -1]
+    X_graph = imp.transform(X_graph)
+    X_graph = transformer.transform(X_graph)
+    X_graph = scaler.transform(X_graph)
+    probs = model.predict_proba(X_graph)
+    graph_probs = []
+
+    for line in range(0, len(probs)):
+        if y_graph.values[line] == 1:
+            graph_probs.append([probs[line][0], translater.dic["30_days"][flag], translater.dic["training_data"][flag]])
+        elif y_graph.values[line] == 2:
+            graph_probs.append([probs[line][1], translater.dic["30_90_days"][flag], translater.dic["training_data"][flag]])
+        elif y_graph.values[line] == 3:
+            graph_probs.append([probs[line][2], translater.dic["90_days"][flag], translater.dic["training_data"][flag]])
+
+    graph_probs.append([probability[0][0], translater.dic["30_days"][flag], translater.dic["current_patient"][flag]])
+    graph_probs.append([probability[0][1], translater.dic["30_90_days"][flag], translater.dic["current_patient"][flag]])
+    graph_probs.append([probability[0][2], translater.dic["90_days"][flag], translater.dic["current_patient"][flag]])
+
+    df = pd.DataFrame(graph_probs, columns=[translater.dic["probability"][flag], translater.dic["days_after_surgery"][flag], 'Tipo'])
+
+    fig_death_months = px.violin(df, y=translater.dic["probability"][flag], x=translater.dic["days_after_surgery"][flag], color='Tipo',
+                                 violinmode='overlay', box=True, points="all",
+                                 category_orders={translater.dic["days_after_surgery"][flag]: [translater.dic["30_days"][flag],
+                                                                                               translater.dic["30_90_days"][flag],
+                                                                                               translater.dic["90_days"][flag]]},
+                                 hover_data=df.columns)
+    return fig_death_months, message_death_months
+
+
+def predict_nas(flag, value1, value2, value3, value4):
+    imp = pickle.load(open("./models/nas_imputer.sav", 'rb'))
+    x = imp.transform([[value1, value2, value3, value4]])
+
+    transformer = pickle.load(open("./models/nas_transformer.sav", 'rb'))
+    x = transformer.transform(x)
+
+    scaler = pickle.load(open("./models/nas_scaler.sav", 'rb'))
+    x = scaler.transform(x)
+
+    model = pickle.load(open("./models/nas_model.sav", 'rb'))
+    pred = model.predict(x)
+
+    message_nas = ""
+    if pred[0] <= 60:
+        message_nas = translater.dic["0_60_points"][flag]
+    elif pred[0] > 60 and pred[0] <= 120:
+        message_nas = translater.dic["60_120_points"][flag]
+    elif pred[0] > 120:
+        message_nas = translater.dic["120_points"][flag]
+
+    df = load_and_run.load_data(global_variables.outputs[5],
+                                ['ARISCAT duração cirurgia', 'PP nº procedimentos', 'ACS sépsis sistémica', 'PP leucócitos'])
+
+    X_graph = df.iloc[:, :-1]
+    y_graph = df.iloc[:, -1].values
+    X_graph = imp.transform(X_graph)
+    X_graph = transformer.transform(X_graph)
+    X_graph = scaler.transform(X_graph)
+    preds = model.predict(X_graph)
+    graph_preds = []
+
+    for line in range(0, len(preds)):
+        graph_preds.append([y_graph[line], preds[line], y_graph[line] - preds[line]])
+
+    df = pd.DataFrame(graph_preds,
+                      columns=[translater.dic["nas"][flag], translater.dic["predicted_points"][flag], translater.dic["error_points"][flag]])
+
+    fig_nas = px.scatter(df, x=translater.dic["predicted_points"][flag], y=translater.dic["nas"][flag])
+    fig_nas_2 = px.scatter(df, x=translater.dic["predicted_points"][flag], y=translater.dic["error_points"][flag])
+
+    return fig_nas, fig_nas_2, message_nas, pred
 
 
 # Create a Dash layout
